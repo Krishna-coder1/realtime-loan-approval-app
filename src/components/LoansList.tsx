@@ -71,7 +71,7 @@ const LoanStatusComponent: React.FC<{
     <div>
       {source === Roles.BFB && (
         <div>
-          <h1>Customer Loan Statuses</h1>
+          <h1>Customer Loan Status</h1>
           <LoanTable
             source={source}
             onRefresh={fetchCustomerLoanRequests}
@@ -81,7 +81,7 @@ const LoanStatusComponent: React.FC<{
           <br />
         </div>
       )}
-      <h1>Vendor Loan Statuses</h1>
+      <h1>Vendor Loan Status</h1>
       <LoanTable
         source={Roles.VENDOR}
         onRefresh={fetchVendorLoanRequests}

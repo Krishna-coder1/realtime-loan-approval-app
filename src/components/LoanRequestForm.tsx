@@ -10,12 +10,30 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  DialogActions,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { LoanRequestData } from "@/domain/interface/LoanRequestData";
 import { LoanRequester } from "@/domain/use-case/SubmitLoanRequestImplementation";
 import { LoanFetcher } from "@/domain/use-case/FetchLoansImplementation";
 import { Roles } from "@/enums/Roles";
+import { LoanRequestEntity } from "@/domain/interface/LoanRequestEntity";
+import {
+  Cancel,
+  CheckCircle,
+  CheckRounded,
+  CheckroomOutlined,
+  Close,
+  CloseFullscreenRounded,
+  CloseOutlined,
+  CloseRounded,
+  CopyrightOutlined,
+  Error,
+} from "@mui/icons-material";
 
 const theme = createTheme();
 
@@ -37,9 +55,9 @@ const LoanRequestForm: React.FC<{
 }> = ({ source, publishLoanRequest, loanFetcher }) => {
   const [formData, setFormData] = useState<LoanRequestData>(initialFormData);
   const [loading, setLoading] = useState<boolean>(false);
-  const [loanResult, setLoanResult] = useState<any>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>("");
+  const [loanResult, setLoanResult] = useState<LoanRequestEntity>(null);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [dialogMessage, setDialogMessage] = useState<string>("");
 
   const handleChange: any = (
     event: ChangeEvent<
@@ -53,94 +71,133 @@ const LoanRequestForm: React.FC<{
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
-    setSnackbarOpen(true);
-    setSnackbarMessage("Submitting Loan Request");
+    setDialogOpen(true);
+    setDialogMessage("Submitting Loan Request");
     const response = await publishLoanRequest.submitLoanRequest(formData);
     if (response.message) {
-      setSnackbarMessage("Processing loan request");
+      setDialogMessage("Processing loan request");
       console.log("Loan request submitted successfully");
-      // Check if the source is 'vendor' to fetch the latest vendor record
-      if (formData.source === "vendor") {
-        // Wait for the backend to process the data and update the loan status
-        setTimeout(async () => {
-          const latestLoanResponse = await loanFetcher.fetch<{
-            ok: boolean;
-            json: Function;
-          }>(Roles.VENDOR, "latest_loan");
-          if (latestLoanResponse.ok) {
-            const latestLoanData = await latestLoanResponse.json();
-            setLoanResult(latestLoanData);
-            setSnackbarMessage(
-              `You Loan ID is ${latestLoanData.LOAN_ID} Loan Status: ${latestLoanData.LOAN_STATUS}D`
-            );
-            setSnackbarOpen(true);
-          } else {
-            console.error("Failed to fetch the latest loan status");
-          }
-          setLoading(false);
-        }, 5000); // Assuming there is a delay for data processing
-      } else if (formData.source === Roles.BFB) {
-        // Wait for the backend to process the data and update the loan status
-        setTimeout(async () => {
-          const latestLoanResponse = await loanFetcher.fetch<{
-            ok: boolean;
-            json: Function;
-          }>(Roles.BFB, "latest_loan");
-          if (latestLoanResponse.ok) {
-            const latestLoanData = await latestLoanResponse.json();
-            setLoanResult(latestLoanData);
-            setSnackbarMessage(
-              `You Loan ID is ${latestLoanData.LOAN_ID} Loan Status: ${latestLoanData.LOAN_STATUS}D`
-            );
-            setSnackbarOpen(true);
-          } else {
-            console.error("Failed to fetch the latest loan status");
-          }
-          setLoading(false);
-        }, 5000); // Assuming there is a delay for data processing
-      } else {
+      const fetchLoanStatus = async () => {
+        const latestLoanResponse = await loanFetcher.fetch<{
+          ok: boolean;
+          json: Function;
+        }>(formData.source as Roles, "latest_loan");
+        if (latestLoanResponse.ok) {
+          const latestLoanData = await latestLoanResponse.json();
+          setLoanResult(latestLoanData);
+          setDialogMessage(
+            `Your Loan ID is ${latestLoanData.LOAN_ID}. Loan Status: ${latestLoanData.LOAN_STATUS}`
+          );
+        } else {
+          console.error("Failed to fetch the latest loan status");
+          setDialogMessage("Failed to fetch the latest loan status");
+        }
         setLoading(false);
-      }
+      };
+
+      setTimeout(fetchLoanStatus, 3000); // Assuming there is a delay for data processing
     } else {
       console.error("Failed to submit loan request");
+      setDialogMessage("Failed to submit loan request");
       setLoading(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbarMessage("");
+  const handleCloseDialog = () => {
+    setDialogMessage("");
     setLoanResult(null);
-    setSnackbarOpen(false);
+    setDialogOpen(false);
   };
+
   return (
     <ThemeProvider theme={theme}>
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "left" }}
-        open={snackbarOpen}
-        autoHideDuration={null}
-        onClose={handleCloseSnackbar}
+      <Dialog
+        disableEscapeKeyDown
+        open={dialogOpen}
+        aria-labelledby="loan-status-dialog-title"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: loading
+              ? "white"
+              : loanResult?.LOAN_STATUS === "APPROVE"
+              ? "radial-gradient(circle, rgba(246,246,246,1) 0%, rgba(255,255,255,1) 0%, rgba(249,255,244,1) 100%)"
+              : "radial-gradient(circle, rgba(246,246,246,1) 0%, rgba(255,255,255,1) 0%, rgba(255,245,244,1) 100%)",
+          },
+        }}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={
-            loanResult
-              ? loanResult?.LOAN_STATUS === "APPROVE"
-                ? "success"
-                : "error"
-              : "info"
-          }
-          sx={{ width: "100%" }}
-        >
-          {loading ? (
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <CircularProgress size={24} sx={{ marginRight: 2 }} />
-              {snackbarMessage}
-            </Box>
-          ) : (
-            snackbarMessage
-          )}
-        </Alert>
-      </Snackbar>
+        <DialogTitle id="loan-status-dialog-title">Loan Status</DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={80} sx={{ marginBottom: 2 }} />
+            ) : null}
+            {!loading && (
+              <div>
+                {loanResult?.LOAN_STATUS !== "APPROVE" ? (
+                  <Cancel sx={{ fontSize: "10rem" }} color="error" />
+                ) : (
+                  <CheckCircle color="success" sx={{ fontSize: "10rem" }} />
+                )}
+              </div>
+            )}
+            {loading && (
+              <Typography color={"InfoText"}>{dialogMessage}...</Typography>
+            )}
+            <br />
+            {!loading && (
+              <Grid
+                rowSpacing={0}
+                border={1}
+                padding={1}
+                marginLeft={3}
+                container
+                xs={6}
+              >
+                <Grid item xs={6}>
+                  <Typography fontWeight={300}>Loan ID:</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography fontWeight={400}>
+                    {loanResult?.LOAN_ID}
+                  </Typography>
+                </Grid>
+                <Grid xs={6} item>
+                  <hr />
+                </Grid>
+                <Grid xs={6} item>
+                  <hr />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <Typography fontWeight={300}>Loan Status:</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography fontWeight={400}>
+                    {loanResult?.LOAN_STATUS}
+                  </Typography>
+                </Grid>
+              </Grid>
+            )}
+            <br />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            disabled={loading}
+            onClick={() => setDialogOpen(false)}
+            variant="contained"
+          >
+            Okay
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Container component="main" maxWidth="sm">
         <CssBaseline />
         <Box
