@@ -22,18 +22,7 @@ import { LoanRequester } from "@/domain/use-case/SubmitLoanRequestImplementation
 import { LoanFetcher } from "@/domain/use-case/FetchLoansImplementation";
 import { Roles } from "@/enums/Roles";
 import { LoanRequestEntity } from "@/domain/interface/LoanRequestEntity";
-import {
-  Cancel,
-  CheckCircle,
-  CheckRounded,
-  CheckroomOutlined,
-  Close,
-  CloseFullscreenRounded,
-  CloseOutlined,
-  CloseRounded,
-  CopyrightOutlined,
-  Error,
-} from "@mui/icons-material";
+import { Cancel, CheckCircle } from "@mui/icons-material";
 
 const theme = createTheme();
 
@@ -140,10 +129,10 @@ const LoanRequestForm: React.FC<{
             ) : null}
             {!loading && (
               <div>
-                {loanResult?.LOAN_STATUS !== "APPROVE" ? (
-                  <Cancel sx={{ fontSize: "10rem" }} color="error" />
-                ) : (
+                {loanResult?.LOAN_STATUS === "APPROVE" ? (
                   <CheckCircle color="success" sx={{ fontSize: "10rem" }} />
+                ) : (
+                  <Cancel sx={{ fontSize: "10rem" }} color="error" />
                 )}
               </div>
             )}
