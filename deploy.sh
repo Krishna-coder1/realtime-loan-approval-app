@@ -2,7 +2,7 @@
 
 # Step 1: Install dependencies
 echo "Installing dependencies..."
-npm i -f && npm i -g pm2
+npm i -f && sudo npm i -g pm2
 
 # Step 2: Build the application with environment variables
 echo "Building the application..."
