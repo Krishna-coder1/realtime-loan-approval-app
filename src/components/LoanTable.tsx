@@ -11,6 +11,8 @@ import {
   IconButton,
   CircularProgress,
   TextField,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { green, red } from "@mui/material/colors";
 import { Refresh } from "@mui/icons-material";
@@ -23,7 +25,6 @@ interface LoanTableProps {
   onRefresh: Function;
   source: string;
 }
-
 const LoanTable: React.FC<LoanTableProps> = ({
   source,
   loans,
@@ -33,6 +34,7 @@ const LoanTable: React.FC<LoanTableProps> = ({
   const [searchId, setSearchId] = useState<string>("");
   const [filteredLoans, setFilteredLoans] =
     useState<LoanRequestEntity[]>(loans);
+  const [tabValue, setTabValue] = useState(0);
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchId(value);
@@ -45,13 +47,15 @@ const LoanTable: React.FC<LoanTableProps> = ({
       setFilteredLoans(filtered);
     }
   };
-
   useEffect(() => {
     setFilteredLoans(loans);
   }, [loans]);
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   return (
-    <TableContainer component={Paper}>
+    <Paper>
       <div
         style={{
           display: "flex",
@@ -75,69 +79,70 @@ const LoanTable: React.FC<LoanTableProps> = ({
           <Refresh />
         </IconButton>
       </div>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Loan ID</TableCell>
-            <TableCell>Origin</TableCell>
-            <TableCell>Loan Amount Requested</TableCell>
-            <TableCell>Tenure</TableCell>
-            <TableCell>Salary</TableCell>
-            <TableCell>Collateral Amount</TableCell>
-            {source === Roles.BFB && <TableCell>PAN Number</TableCell>}{" "}
-            <TableCell>Contact Number</TableCell>
-            <TableCell>Credit Score</TableCell>
-            <TableCell>Status</TableCell>
-          </TableRow>
-        </TableHead>
-        {loading ? (
-          <CircularProgress
-            size={20}
-            sx={{ margin: "1rem", textAlign: "center" }}
-          />
-        ) : (
-          <TableBody>
-            {filteredLoans.length > 0 ? (
-              filteredLoans.map((loan) => (
-                <TableRow key={loan.LOAN_ID}>
-                  <TableCell>{loan.LOAN_ID}</TableCell>
-                  <TableCell>{loan.SOURCE}</TableCell>
-                  <TableCell>{loan.LOAN_AMOUNT_REQ}</TableCell>
-                  <TableCell>{loan.TENURE}</TableCell>
-                  <TableCell>{loan.SALARY}</TableCell>
-                  <TableCell>{loan.COLLATERAL_AMOUNT}</TableCell>
-                  {source === Roles.BFB && (
-                    <TableCell>{loan.PAN_NUMBER}</TableCell>
-                  )}
-                  <TableCell>{loan.CONTACT_NO}</TableCell>
-                  <TableCell>{loan.CREDIT_SCORE}</TableCell>
 
-                  <TableCell>
-                    <Typography
-                      style={{
-                        color:
-                          loan.LOAN_STATUS === "APPROVE"
-                            ? green[500]
-                            : red[500],
-                      }}
-                    >
-                      {loan.LOAN_STATUS}D
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
+      {tabValue === 0 && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={9} align="center">
-                  No loans found
-                </TableCell>
+                <TableCell>Loan ID</TableCell> <TableCell>Origin</TableCell>
+                <TableCell>Loan Amount Requested</TableCell>
+                <TableCell>Tenure</TableCell> <TableCell>Salary</TableCell>
+                <TableCell>Collateral Amount</TableCell>
+                {source === Roles.BFB && <TableCell>PAN Number</TableCell>}
+                <TableCell>Contact Number</TableCell>
+                <TableCell>Credit Score</TableCell>
+                <TableCell>Status</TableCell>
               </TableRow>
+            </TableHead>
+            {loading ? (
+              <CircularProgress
+                size={20}
+                sx={{ margin: "1rem", textAlign: "center" }}
+              />
+            ) : (
+              <TableBody>
+                {filteredLoans.length > 0 ? (
+                  filteredLoans.map((loan) => (
+                    <TableRow key={loan.LOAN_ID}>
+                      <TableCell>{loan.LOAN_ID}</TableCell>
+                      <TableCell>{loan.SOURCE}</TableCell>
+                      <TableCell>{loan.LOAN_AMOUNT_REQ}</TableCell>
+                      <TableCell>{loan.TENURE}</TableCell>
+                      <TableCell>{loan.SALARY}</TableCell>
+                      <TableCell>{loan.COLLATERAL_AMOUNT}</TableCell>
+                      {source === Roles.BFB && (
+                        <TableCell>{loan.PAN_NUMBER}</TableCell>
+                      )}
+                      <TableCell>{loan.CONTACT_NO}</TableCell>
+                      <TableCell>{loan.CREDIT_SCORE}</TableCell>
+                      <TableCell>
+                        <Typography
+                          style={{
+                            color:
+                              loan.LOAN_STATUS === "APPROVE"
+                                ? green[500]
+                                : red[500],
+                          }}
+                        >
+                          {loan.LOAN_STATUS}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center">
+                      No loans found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
             )}
-          </TableBody>
-        )}
-      </Table>
-    </TableContainer>
+          </Table>
+        </TableContainer>
+      )}
+    </Paper>
   );
 };
-
 export default LoanTable;
